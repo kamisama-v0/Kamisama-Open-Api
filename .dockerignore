@@ -1,0 +1,16 @@
+# Build context Dockerfile — kecualikan yang tidak dibutuhkan image.
+node_modules
+.git
+.env
+.env.*
+!.env.example
+uploads
+dist
+coverage
+*.pem
+*.crx
+*.log
+.netlify
+watchtracker-extension
+docs
+.vscode

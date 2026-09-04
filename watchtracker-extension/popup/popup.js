@@ -1,6 +1,6 @@
 // WatchTracker popup — vanilla JS (MV3, tanpa bundler).
-// API_BASE bisa diganti ke URL produksi saat deploy.
-const API_BASE = 'http://localhost:3000';
+// PROD default. Untuk dev lokal, ganti sementara ke 'http://localhost:3000'.
+const API_BASE = 'https://elysia.kamisama-v0.my.id';
 
 let authToken = null;
 let currentGroup = '';

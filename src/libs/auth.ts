@@ -18,6 +18,7 @@ import {
 	superAdmin,
 	kamisama
 } from '../modules/auth/permissions'
+import { extraOrigins } from '../utils/origins'
 
 const CustomSignupBodySchema = z.object({
 	email: z.string().email({ message: 'Invalid email address' }),
@@ -50,7 +51,9 @@ export const auth = betterAuth({
 			const emailHtml = emailTemplate.replace('{{verification_link}}', url)
 
 			await transporter.sendMail({
-				from: '"Kamisama" <no-reply@kamisama.com>',
+				// Brevo hanya mengizinkan sender yang sudah diverifikasi
+				// (domain/sender di dashboard Brevo).
+				from: process.env.MAIL_FROM || '"Kamisama" <no-reply@kamisama.com>',
 				to: user.email,
 				subject: 'Verify your email address',
 				html: emailHtml
@@ -75,8 +78,18 @@ export const auth = betterAuth({
 		bearer()
 	],
 	basePath: '/api/auth',
-	baseURL: 'http://localhost:3000',
-	trustedOrigins: ['http://localhost:5173', process.env.FRONTEND_URL || '*'],
+	// BETTER_AUTH_URL = full URL (mis. https://elysia.kamisama-v0.my.id/api/auth).
+	// baseURL butuh origin-nya saja, jadi suffix /api/auth dipangkas bila ada.
+	baseURL: (process.env.BETTER_AUTH_URL || process.env.BASE_URL || 'http://localhost:3000').replace(/\/api\/auth\/?$/, ''),
+	// Tanpa '*' — daftarkan semua origin yang sah, termasuk extension (exact match).
+	trustedOrigins: [
+		'http://localhost:5173',
+		'https://kamisama-v0.netlify.app',
+		'https://elysia.kamisama-v0.my.id',
+		process.env.FRONTEND_URL,
+		process.env.EXTENSION_ORIGIN,
+		...extraOrigins
+	].filter((o): o is string => Boolean(o)),
 	advanced: {
 		crossSubDomainCookies: {
 			enabled: true,

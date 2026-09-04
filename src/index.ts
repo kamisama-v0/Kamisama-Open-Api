@@ -10,21 +10,31 @@ import { LanguageRoutes } from './modules/languages'
 import { ArticleStatusRoutes } from './modules/article-statuses'
 import { UploadRoutes } from './modules/uploads'
 import { betterAuth } from './modules/auth/macros'
+import { startKeepalive } from './libs/keepalive'
+import { extraOrigins } from './utils/origins'
 import { ProfileRoutes } from './modules/profile'
 import { WatchRoutes } from './modules/watch'
 import { staticPlugin } from '@elysiajs/static'
 
 export const app = new Elysia()
 
+// Origin yang diizinkan — explicit, tanpa '*' (tidak valid bareng credentials:true).
+// EXTENSION_ORIGIN diisi exact origin extension, mis. chrome-extension://<32-char-id>
+const allowedOrigins = [
+	'http://localhost:3000',
+	'http://localhost:5173',
+	'https://kamisama-v0.netlify.app',
+	'https://elysia.kamisama-v0.my.id',
+	process.env.FRONTEND_URL,
+	process.env.EXTENSION_ORIGIN,
+	...extraOrigins
+].filter((o): o is string => Boolean(o))
+const origins = [...new Set(allowedOrigins)]
+
 app
 	.use(
 		cors({
-			origin: [
-				'http://localhost:3000',
-				'http://localhost:5173',
-				'https://kamisama-v0.netlify.app',
-				process.env.FRONTEND_URL || '*'
-			],
+			origin: origins,
 			methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
 			allowedHeaders: ['Content-Type', 'Authorization'],
 			credentials: true
@@ -99,6 +109,24 @@ app
 			}
 		}
 	)
+	.get(
+		'/health',
+		({ status }) => {
+			return status(200, {
+				status: 200,
+				message: 'ok',
+				uptime: process.uptime(),
+				timestamp: new Date().toISOString()
+			})
+		},
+		{
+			detail: {
+				tags: ['App'],
+				description: 'Health check untuk Render / monitor eksternal',
+				summary: 'Health check'
+			}
+		}
+	)
 	.group('/api/v1', (app) => app.use(ipaymuVendor))
 	.use(ArticleRoutes)
 	.use(TagRoutes)
@@ -109,6 +137,8 @@ app
 	.use(UploadRoutes)
 	.use(WatchRoutes)
 	.listen(process.env.PORT ?? 3000)
+
+startKeepalive()
 
 console.log(
 	`🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`

@@ -1,10 +1,11 @@
 {
 	"manifest_version": 3,
 	"name": "WatchTracker",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "Track your watch progress across streaming platforms",
+	"key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA9WCaojiSB260NAZalKoWCizAZnpYg6sCZoAKloPsleKU786PcyjtAxBEYeELJzWvJ1NYtyK8YHVbmdeT+kEs7hkfJJO6RFfUnyShHK3FbQg/wgmBROLiDGOpqSLisf4q3s+hiZF679fBs/eqYnMTDFmAozDTbns44F49o6Ft40vCLuyYjqyrJcyRTJQdr47ZDKcIAfn5NU/tIpi7lHMskOR/N737cUVjDHVXo4CuZ1MjjhkGzPyNIHGRPDZBa9njxtPSs6VUol0xbVsLvXiSGs10OhuF2dyHEVupfQ2NjUnVP4C6ZMcFiOldaltdbSej4wqHWwHTr9z12/5RlSmVwwIDAQAB",
 	"permissions": ["activeTab", "storage", "scripting"],
-	"host_permissions": ["http://localhost:3000/*", "https://*/*"],
+	"host_permissions": ["http://localhost:3000/*", "https://elysia.kamisama-v0.my.id/*"],
 	"action": {
 		"default_popup": "popup/popup.html",
 		"default_icon": "icons/icon-128.png"
