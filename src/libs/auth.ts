@@ -1,6 +1,6 @@
 import { BetterAuthError, User, betterAuth } from 'better-auth'
 import { prismaAdapter } from 'better-auth/adapters/prisma'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from './db'
 import transporter from './mail'
 import {
 	openAPI,
@@ -19,8 +19,6 @@ import {
 	kamisama
 } from '../modules/auth/permissions'
 
-const prisma = new PrismaClient()
-
 const CustomSignupBodySchema = z.object({
 	email: z.string().email({ message: 'Invalid email address' }),
 	password: z
@@ -33,7 +31,7 @@ const CustomSignupBodySchema = z.object({
 
 export const auth = betterAuth({
 	database: prismaAdapter(prisma, {
-		provider: 'mongodb'
+		provider: 'postgresql'
 	}),
 	session: {
 		expiresIn: 60 * 60 * 24 * 7, // 1 week

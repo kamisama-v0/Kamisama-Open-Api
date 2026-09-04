@@ -1,7 +1,5 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../../libs/db';
 import type { TagModelType, UpdateTagModelType } from './model';
-
-const prisma = new PrismaClient();
 
 export const getTags = async () => {
     return await prisma.tag.findMany({

@@ -1,13 +1,13 @@
-import { PrismaClient, User } from '@prisma/client'
+import type { User } from '../src/generated/prisma/client'
+import { prisma } from '../src/libs/db'
 import { auth } from '../src/libs/auth'
-
-const prisma = new PrismaClient()
 // FUNGSI BARU UNTUK MEMBERSIHKAN DATABASE
 const cleanDb = async () => {
 	console.log('Cleaning the database...')
 	try {
 		await prisma.$transaction([
 			prisma.articleView.deleteMany({}),
+			prisma.articleTag.deleteMany({}),
 			prisma.profile.deleteMany({}),
 			prisma.member.deleteMany({}),
 			prisma.invitation.deleteMany({}),
@@ -230,12 +230,20 @@ const seedArticles = async (
 	]
 
 	for (const article of articlesData) {
+		const { tagIds, ...rest } = article as typeof article & {
+			tagIds: string[]
+		}
 		await prisma.article.upsert({
 			where: { slug: article.slug },
 			update: {},
 			create: {
-				...article,
-				authorId: authorId
+				...rest,
+				authorId: authorId,
+				tags: {
+					create: tagIds.map((id: string) => ({
+						tag: { connect: { id } }
+					}))
+				}
 			}
 		})
 	}

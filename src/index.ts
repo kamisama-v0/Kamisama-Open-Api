@@ -11,6 +11,7 @@ import { ArticleStatusRoutes } from './modules/article-statuses'
 import { UploadRoutes } from './modules/uploads'
 import { betterAuth } from './modules/auth/macros'
 import { ProfileRoutes } from './modules/profile'
+import { WatchRoutes } from './modules/watch'
 import { staticPlugin } from '@elysiajs/static'
 
 export const app = new Elysia()
@@ -53,10 +54,14 @@ app
 						name: 'Languages',
 						description: 'Endpoints for managing languages'
 					},
-					{
-						name: 'Article Statuses',
-						description: 'Endpoints for managing article statuses'
-					}
+				{
+					name: 'Article Statuses',
+					description: 'Endpoints for managing article statuses'
+				},
+				{
+					name: 'WatchTracker',
+					description: 'Watch progress tracking (Firestore-backed)'
+				}
 				],
 				components: {
 					...(await OpenAPI.components),
@@ -102,6 +107,7 @@ app
 	.use(LanguageRoutes)
 	.use(ArticleStatusRoutes)
 	.use(UploadRoutes)
+	.use(WatchRoutes)
 	.listen(process.env.PORT ?? 3000)
 
 console.log(

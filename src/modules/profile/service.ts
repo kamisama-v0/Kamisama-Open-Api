@@ -1,7 +1,6 @@
-import { Prisma, PrismaClient } from '@prisma/client'
+import { Prisma } from '../../generated/prisma/client'
+import { prisma } from '../../libs/db'
 import type { UpdateProfileModelType } from './model'
-
-const prisma = new PrismaClient()
 
 /**
  * Retrieves a user's profile. If it doesn't exist, it creates one.

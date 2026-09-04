@@ -1,16 +1,15 @@
 
 generator client {
-  provider = "prisma-client-js"
-  binaryTargets = ["native", "linux-musl", "debian-openssl-1.1.x"]
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
-  provider = "mongodb"
-  url      = env("DATABASE_URL")
+  provider = "postgresql"
 }
 
 model User {
-  id              String        @id @map("_id")
+  id              String        @id
   name            String
   email           String
   emailVerified   Boolean
@@ -37,7 +36,7 @@ model User {
 }
 
 model Session {
-  id                   String   @id @map("_id")
+  id                   String   @id
   expiresAt            DateTime
   token                String
   createdAt            DateTime
@@ -54,7 +53,7 @@ model Session {
 }
 
 model Account {
-  id                    String    @id @map("_id")
+  id                    String    @id
   accountId             String
   providerId            String
   userId                String
@@ -73,7 +72,7 @@ model Account {
 }
 
 model Verification {
-  id         String    @id @map("_id")
+  id         String    @id
   identifier String
   value      String
   expiresAt  DateTime
@@ -84,7 +83,7 @@ model Verification {
 }
 
 model Organization {
-  id          String       @id @map("_id")
+  id          String       @id
   name        String
   slug        String?
   logo        String?
@@ -130,7 +129,7 @@ model Invitation {
 // Menyimpan data tambahan pengguna
 
 model Profile {
-  id          String   @id @map("_id") @default(uuid())
+    id             String       @id @default(uuid())
   bio         String?
   avatar      String?
   jobs        String[]
@@ -146,7 +145,7 @@ model Profile {
 // Mengelompokkan artikel
 
 model Category {
-  id       String    @id @map("_id") @default(uuid())
+  id       String    @id @default(uuid())
   name     String    @unique
   slug     String    @unique
   articles Article[]
@@ -155,31 +154,30 @@ model Category {
 // Label fleksibel untuk artikel
 
 model Tag {
-  id         String    @id @map("_id") @default(uuid())
-  name       String    @unique
-  slug       String    @unique
-  articles   Article[] @relation(fields: [articleIds], references: [id])
-  articleIds String[]
+  id          String   @id @default(uuid())
+  name     String       @unique
+  slug     String       @unique
+  articles ArticleTag[]
 }
 
 // Entitas utama untuk konten tulisan
 
 model ArticleStatus {
-  id       String    @id @map("_id") @default(uuid())
+  id       String    @id @default(uuid())
   name     String    @unique
   slug     String    @unique
   articles Article[]
 }
 
 model Language {
-  id       String    @id @map("_id") @default(uuid())
+  id       String    @id @default(uuid())
   name     String    @unique
   slug     String    @unique
   articles Article[]
 }
 
 model Article {
-  id          String    @id @map("_id") @default(uuid())
+  id    String @id @default(uuid())
   title       String
   slug        String    @unique
   content     String
@@ -193,8 +191,7 @@ model Article {
   authorId   String
   category   Category? @relation(fields: [categoryId], references: [id])
   categoryId String?
-  tags       Tag[]    @relation(fields: [tagIds], references: [id])
-  tagIds     String[]
+  tags ArticleTag[]
 
   views ArticleView[]
 
@@ -204,10 +201,23 @@ model Article {
   langId     String
 }
 
+// Tabel join eksplisit untuk relasi many-to-many Article ↔ Tag
+// (Postgres tidak mendukung relasi m-n via scalar list seperti MongoDB)
+
+model ArticleTag {
+  article   Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  articleId String
+  tag       Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  tagId     String
+
+  @@id([articleId, tagId])
+  @@map("article_tags")
+}
+
 // Mencatat analitik view artikel
 
 model ArticleView {
-  id        String   @id @map("_id") @default(uuid())
+  id        String   @id @default(uuid())
   viewedAt  DateTime @default(now())
   article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
   articleId String

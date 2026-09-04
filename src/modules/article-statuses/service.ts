@@ -1,7 +1,6 @@
-import { PrismaClient, Prisma } from '@prisma/client'
+import { Prisma } from '../../generated/prisma/client'
+import { prisma } from '../../libs/db'
 import type { CreateArticleStatusModelType, UpdateArticleStatusModelType } from './model'
-
-const prisma = new PrismaClient()
 
 interface GetArticleStatusesOptions {
 	page?: number

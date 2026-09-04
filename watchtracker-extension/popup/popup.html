@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div id="app">
+    <div class="header">
+      <h1>🎬 WatchTracker</h1>
+      <div class="user-info">
+        <span id="userName">Loading...</span>
+        <button id="logoutBtn">Logout</button>
+      </div>
+    </div>
+
+    <div id="loginSection">
+      <input id="emailInput" type="email" placeholder="Email">
+      <input id="passwordInput" type="password" placeholder="Password">
+      <button id="loginBtn">Login</button>
+      <p class="hint">Gunakan akun Kamisama (Better-Auth).</p>
+      <div id="loginError" class="error"></div>
+    </div>
+
+    <div id="mainSection" hidden>
+      <div class="group-selector">
+        <select id="groupSelect">
+          <option value="">Select Group...</option>
+        </select>
+        <button id="addGroupBtn" title="Tambah grup">+</button>
+      </div>
+
+      <div class="current-url">
+        <p>Sedang ditonton:</p>
+        <div id="urlDisplay">Tidak ada tab aktif</div>
+        <div id="videoInfo">—</div>
+      </div>
+
+      <div class="save-form">
+        <input id="episodeInput" type="text" placeholder="Episode (mis. Episode 4)">
+        <div class="row">
+          <input id="timestampInput" type="text" placeholder="00:30:20">
+          <button id="grabTimeBtn" title="Ambil posisi video saat ini">⏱ Ambil</button>
+        </div>
+        <button id="saveBtn">📝 Simpan Progres</button>
+      </div>
+
+      <div class="history-list">
+        <h2>📺 Terakhir Ditonton</h2>
+        <div id="historyItems"></div>
+      </div>
+    </div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

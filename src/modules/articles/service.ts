@@ -1,10 +1,9 @@
-import { PrismaClient, Prisma } from '@prisma/client'
+import { Prisma } from '../../generated/prisma/client'
+import { prisma } from '../../libs/db'
 import { ArticleModel } from './model' // Mengimpor namespace utama dari model
 import { generateSlug } from '../../utils/slug'
 import { sanitizeEditorJsContent } from '../../utils/xss'
 import { getFullUrl } from '../../utils/url'
-
-const prisma = new PrismaClient()
 
 /**
  * Service untuk menangani semua logika bisnis yang terkait dengan artikel.
@@ -21,6 +20,15 @@ export abstract class ArticleService {
 	private static transformArticle(article: any): ArticleModel.Data | null {
 		if (!article) {
 			return null
+		}
+
+		// Flatten relasi join eksplisit ArticleTag → Tag[] agar bentuk respons API tidak berubah
+		if (
+			Array.isArray(article.tags) &&
+			article.tags.length > 0 &&
+			article.tags[0]?.tag
+		) {
+			article.tags = article.tags.map((at: any) => at.tag)
 		}
 
 		// Transformasi coverImage
@@ -133,7 +141,7 @@ export abstract class ArticleService {
 		if (tags) {
 			where.tags = {
 				some: {
-					id: {
+					tagId: {
 						in: tags
 							.split(',')
 							.map((t) => t.trim())
@@ -158,7 +166,7 @@ export abstract class ArticleService {
 				include: {
 					author: { select: { id: true, name: true, image: true } },
 					category: true,
-					tags: true,
+					tags: { include: { tag: true } },
 					status: true,
 					lang: true,
 					_count: { select: { views: true } }
@@ -183,7 +191,7 @@ export abstract class ArticleService {
 			include: {
 				author: { select: { id: true, name: true, image: true } },
 				category: true,
-				tags: true,
+				tags: { include: { tag: true } },
 				status: true,
 				lang: true,
 				_count: { select: { views: true } }
@@ -206,7 +214,7 @@ export abstract class ArticleService {
 			include: {
 				author: { select: { id: true, name: true, image: true } },
 				category: true,
-				tags: true,
+				tags: { include: { tag: true } },
 				status: true,
 				lang: true,
 				_count: { select: { views: true } }
@@ -218,7 +226,7 @@ export abstract class ArticleService {
 		}
 
 		// Ambil ID tag dan kategori dari artikel saat ini
-		const tagIds = articleData.tags.map((tag) => tag.id)
+		const tagIds = articleData.tags.map((at) => at.tag.id)
 		const categoryId = articleData.categoryId
 
 		// Cari artikel serupa
@@ -325,7 +333,11 @@ export abstract class ArticleService {
 			}),
 			...(data.tagIds &&
 				data.tagIds.length > 0 && {
-					tags: { connect: data.tagIds.map((id) => ({ id })) }
+					tags: {
+						create: data.tagIds.map((id) => ({
+							tag: { connect: { id } }
+						}))
+					}
 				})
 		}
 
@@ -336,7 +348,7 @@ export abstract class ArticleService {
 			include: {
 				author: { select: { id: true, name: true, image: true } },
 				category: true,
-				tags: articleCreateData.tags ? true : false,
+				tags: articleCreateData.tags ? { include: { tag: true } } : false,
 				status: true,
 				lang: true,
 				_count: { select: { views: true } }
@@ -410,7 +422,14 @@ export abstract class ArticleService {
 				? { connect: { id: categoryId } }
 				: { disconnect: true }
 		if (tagIds !== undefined)
-			articleUpdateData.tags = { set: tagIds.map((id) => ({ id })) }
+			articleUpdateData.tags = {
+				deleteMany: {},
+				...(tagIds.length > 0 && {
+					create: tagIds.map((id) => ({
+						tag: { connect: { id } }
+					}))
+				})
+			}
 
 		const updatedArticle = await prisma.article.update({
 			where: { id },
@@ -418,7 +437,7 @@ export abstract class ArticleService {
 			include: {
 				author: { select: { id: true, name: true, image: true } },
 				category: true,
-				tags: true,
+				tags: { include: { tag: true } },
 				status: true,
 				lang: true,
 				_count: { select: { views: true } }
