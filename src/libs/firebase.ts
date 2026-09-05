@@ -11,9 +11,14 @@ import { getFirestore } from 'firebase-admin/firestore'
 function initFirebaseAdmin() {
 	if (getApps().length > 0) return getApps()[0]!
 
-	const projectId = process.env.FIREBASE_PROJECT_ID
-	const clientEmail = process.env.FIREBASE_CLIENT_EMAIL
-	const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
+	// Toleran terhadap value yang kepaste beserta kutipnya ("...") dari dashboard/secret.
+	// Docker env_file tidak selalu strip kutip, jadi bersihkan di sini.
+	const unquote = (v: string | undefined): string | undefined =>
+		v?.trim().replace(/^["'](.*)["']$/, '$1')
+
+	const projectId = unquote(process.env.FIREBASE_PROJECT_ID)
+	const clientEmail = unquote(process.env.FIREBASE_CLIENT_EMAIL)
+	const privateKey = unquote(process.env.FIREBASE_PRIVATE_KEY)?.replace(/\\n/g, '\n')
 
 	if (!projectId || !clientEmail || !privateKey) {
 		throw new Error(
