@@ -65,6 +65,9 @@ model Account {
   refreshTokenExpiresAt DateTime?
   scope                 String?
   password              String?
+  // better-auth >=1.2 kirim issuer (local:credential) saat create account.
+  // Nullable agar baris lama tetap valid.
+  issuer                String?
   createdAt             DateTime
   updatedAt             DateTime
 
