@@ -1,6 +1,8 @@
 # kamisama-open-api — deploy ke shared host rumah via runner kamisama-v0.
-# Secrets (repo Settings → Secrets → Actions), cukup SATU (pola kantor):
-#   ENV_FILE — seluruh isi .env production (copy-paste dari .env lokal yang jalan)
+# Konvensi 3-variable:
+#   1. vars.LIVE_PORT      — GitHub Variable (tab Variables), cth 5002.
+#   2. secrets.ENV_FILE    — GitHub Secret berisi SELURUH .env production (pola kantor).
+#   3. vars.PRODUCTION_URL — GitHub Variable, cth https://api.kamisama-v0.my.id.
 name: deploy
 on:
   push:
@@ -15,7 +17,12 @@ jobs:
       - name: Generate .env dari secrets (pola kantor — 1 file-secret, .env tak pernah di Git)
         run: |
           test -n "${{ secrets.ENV_FILE }}"
+          test -n "${{ vars.PRODUCTION_URL }}"
           printf "%s" "${{ secrets.ENV_FILE }}" > .env
+          # Domain single source of truth = vars.PRODUCTION_URL (timpa yang dari file)
+          grep -v -E "^(PRODUCTION_URL|BASE_URL|BETTER_AUTH_URL)=" .env > .env.tmp && mv .env.tmp .env
+          printf "PRODUCTION_URL=%s\nBASE_URL=%s\nBETTER_AUTH_URL=%s/api/auth\n" \
+            "${{ vars.PRODUCTION_URL }}" "${{ vars.PRODUCTION_URL }}" "${{ vars.PRODUCTION_URL }}" >> .env
           chmod 600 .env
 
       - name: Build image lokal (tanpa registry)
@@ -26,4 +33,11 @@ jobs:
 
       - name: Blue-green deploy (0 downtime via nginx flip)
         # start.sh di image sudah prisma migrate deploy dulu (pola kantor, inline).
-        run: ~/bin/kamisama-deploy.sh kamisama-open-api 5002 kamisama/kamisama-open-api:${{ github.sha }}
+        # LIVE_PORT = GitHub Variable (repo Settings → Secrets and variables → Actions → Variables).
+        run: ~/bin/kamisama-deploy.sh kamisama-open-api ${{ vars.LIVE_PORT }} kamisama/kamisama-open-api:${{ github.sha }}
+
+      - name: Register subdomain (route DNS dulu, idempotent)
+        run: |
+          HOST=$(echo "${{ vars.PRODUCTION_URL }}" | sed -e 's|https://||' -e 's|http://||' -e 's|/.*||')
+          FRONT=$((3000 + ${{ vars.LIVE_PORT }} - 5000))
+          ~/bin/kamisama-subdomain.sh "$HOST" "http://localhost:$FRONT"
