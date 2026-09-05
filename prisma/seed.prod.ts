@@ -11,6 +11,22 @@ const req = (k: string): string => {
 	return v
 }
 
+// Idempoten terhadap 2 bentuk "sudah ada":
+// - Prisma P2002 (unique constraint) dan
+// - Better-Auth APIError USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL (400).
+const isExistsError = (error: any): boolean => {
+	if (error?.code === 'P2002') return true
+	const code =
+		error?.body?.code ?? error?.error?.body?.code ?? error?.code
+	return code === 'USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL'
+}
+
+const fetchByEmail = async (email: string) => {
+	const existing = await prisma.user.findUnique({ where: { email } })
+	if (!existing) throw new Error(`User ${email} harusnya ada tapi tidak ditemukan.`)
+	return existing
+}
+
 const seedKamisama = async () => {
 	console.log('Seeding kamisama user...')
 	const kamisamaEmail = req('SEED_KAMISAMA_EMAIL')
@@ -55,20 +71,11 @@ const seedKamisama = async () => {
 		console.log('Kamisama profile ensured.')
 		return user.user
 	} catch (error: any) {
-		if (error.code === 'P2002') {
+		if (isExistsError(error)) {
 			console.log(
 				'User with this email already exists. Fetching existing user...'
 			)
-			const existingUser = await prisma.user.findUnique({
-				where: { email: kamisamaEmail }
-			})
-			if (!existingUser) {
-				throw new Error(
-					`User with email ${kamisamaEmail} should exist but was not found.`
-				)
-			}
-			console.log('Found existing user:', existingUser.name)
-			return existingUser
+			return await fetchByEmail(kamisamaEmail)
 		} else {
 			console.error('Error creating or fetching user:', error)
 			throw error
@@ -276,10 +283,11 @@ const seedUsers = async () => {
 			})
 			console.log('Successfully created user:', user.user.name)
 		} catch (error: any) {
-			if (error.code === 'P2002') {
+			if (isExistsError(error)) {
 				console.log(`User with email ${userData.email} already exists.`)
 			} else {
 				console.error('Error creating user:', error)
+				throw error
 			}
 		}
 	}
