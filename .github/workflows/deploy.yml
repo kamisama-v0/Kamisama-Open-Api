@@ -15,9 +15,7 @@ concurrency:
 
 jobs:
   build-and-deploy:
-    # TEMP-DIAG: label dilonggarkan ke [self-hosted] untuk buktikan pickup.
-    # Kembalikan ke [self-hosted, kamisama] setelah pickup terbukti.
-    runs-on: [self-hosted]
+    runs-on: [self-hosted, kamisama]
     steps:
       - uses: actions/checkout@v4
 
