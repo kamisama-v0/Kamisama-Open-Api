@@ -28,8 +28,8 @@ jobs:
           ENV_FILE: ${{ secrets.ENV_FILE }}
           PRODUCTION_URL: ${{ vars.PRODUCTION_URL }}
         run: |
-          test -n "$ENV_FILE"
-          test -n "$PRODUCTION_URL"
+          test -n "$ENV_FILE" || { echo "::error::secret ENV_FILE kosong/hilang — isi di repo Settings → Secrets → Actions"; exit 1; }
+          test -n "$PRODUCTION_URL" || { echo "::error::variable PRODUCTION_URL kosong/hilang — isi di repo Settings → Secrets and variables → Actions → Variables"; exit 1; }
           printf "%s" "$ENV_FILE" > .env
           # Domain single source of truth = vars.PRODUCTION_URL (timpa yang dari file)
           grep -v -E "^(PRODUCTION_URL|BASE_URL|BETTER_AUTH_URL)=" .env > .env.tmp && mv .env.tmp .env
