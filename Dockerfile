@@ -1,5 +1,5 @@
 # ---------- Build stage ----------
-FROM oven/bun AS build
+FROM oven/bun:1 AS build
 
 RUN apt-get update && apt-get install -y build-essential python3 pkg-config openssl \
 	&& rm -rf /var/lib/apt/lists/*
@@ -20,7 +20,7 @@ RUN bun x prisma generate
 RUN bun run build
 
 # ---------- Runtime stage ----------
-FROM oven/bun:slim
+FROM oven/bun:1-slim
 
 # openssl dibutuhkan schema-engine saat `prisma migrate deploy`
 RUN apt-get update && apt-get install -y openssl \
@@ -37,8 +37,8 @@ COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/src/templates ./src/templates
 
 # Folder upload dibaca staticPlugin & ditulis UploadService saat runtime.
-# (Free tier: ephemeral — hilang tiap restart/redeploy.)
-RUN mkdir -p /app/uploads/images
+# (Shared host: di-mount volume ./data/uploads via compose — persist antar deploy.)
+RUN mkdir -p /app/uploads/images && chmod +x /app/start.sh
 
 ENV NODE_ENV=production
 

@@ -1,0 +1,37 @@
+# kamisama-open-api — blue-green via kamisama-deploy.sh (server rumah).
+# Variabel diisi deploy script: APP, IMAGE_BLUE, IMAGE_GREEN, BLUE_PORT, GREEN_PORT.
+# Container SELALU listen 3000 internal (kode: process.env.PORT ?? 3000 — jangan set PORT).
+# Uploads persist via ./data (bukan ephemeral seperti di Render).
+services:
+  blue:
+    image: ${IMAGE_BLUE:?IMAGE_BLUE belum diset}
+    container_name: ${APP:?APP belum diset}-blue
+    restart: unless-stopped
+    ports:
+      - "${BLUE_PORT:?BLUE_PORT belum diset}:3000"
+    env_file:
+      - .env
+    volumes:
+      - ./data/uploads:/app/uploads
+    networks:
+      - net
+    mem_limit: 512m
+    cpus: 0.5
+  green:
+    image: ${IMAGE_GREEN:?IMAGE_GREEN belum diset}
+    container_name: ${APP:?APP belum diset}-green
+    restart: unless-stopped
+    ports:
+      - "${GREEN_PORT:?GREEN_PORT belum diset}:3000"
+    env_file:
+      - .env
+    volumes:
+      - ./data/uploads:/app/uploads
+    networks:
+      - net
+    mem_limit: 512m
+    cpus: 0.5
+
+networks:
+  net:
+    name: kamisama-${APP:?APP belum diset}
