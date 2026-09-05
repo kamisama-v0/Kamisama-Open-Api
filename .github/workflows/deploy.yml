@@ -8,9 +8,16 @@ on:
   push:
     branches: [master]
 
+# Batalkan run antre lama kalau ada push baru (hindari tumpukan deploy)
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-and-deploy:
-    runs-on: [self-hosted, kamisama]
+    # TEMP-DIAG: label dilonggarkan ke [self-hosted] untuk buktikan pickup.
+    # Kembalikan ke [self-hosted, kamisama] setelah pickup terbukti.
+    runs-on: [self-hosted]
     steps:
       - uses: actions/checkout@v4
 
