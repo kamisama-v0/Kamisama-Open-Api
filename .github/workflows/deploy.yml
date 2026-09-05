@@ -22,14 +22,19 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Generate .env dari secrets (pola kantor — 1 file-secret, .env tak pernah di Git)
+        # Secrets via env: (bukan interpolasi langsung) agar kutip/spasi/$ di dalam
+        # value tidak dimaknai shell. Pelajaran: MAIL_FROM="Kamisama <...>" merusak test -n "...".
+        env:
+          ENV_FILE: ${{ secrets.ENV_FILE }}
+          PRODUCTION_URL: ${{ vars.PRODUCTION_URL }}
         run: |
-          test -n "${{ secrets.ENV_FILE }}"
-          test -n "${{ vars.PRODUCTION_URL }}"
-          printf "%s" "${{ secrets.ENV_FILE }}" > .env
+          test -n "$ENV_FILE"
+          test -n "$PRODUCTION_URL"
+          printf "%s" "$ENV_FILE" > .env
           # Domain single source of truth = vars.PRODUCTION_URL (timpa yang dari file)
           grep -v -E "^(PRODUCTION_URL|BASE_URL|BETTER_AUTH_URL)=" .env > .env.tmp && mv .env.tmp .env
           printf "PRODUCTION_URL=%s\nBASE_URL=%s\nBETTER_AUTH_URL=%s/api/auth\n" \
-            "${{ vars.PRODUCTION_URL }}" "${{ vars.PRODUCTION_URL }}" "${{ vars.PRODUCTION_URL }}" >> .env
+            "$PRODUCTION_URL" "$PRODUCTION_URL" "$PRODUCTION_URL" >> .env
           chmod 600 .env
 
       - name: Build image lokal (tanpa registry)
