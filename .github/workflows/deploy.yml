@@ -48,6 +48,11 @@ jobs:
         # LIVE_PORT = GitHub Variable (repo Settings → Secrets and variables → Actions → Variables).
         run: ~/bin/kamisama-deploy.sh kamisama-open-api ${{ vars.LIVE_PORT }} kamisama/kamisama-open-api:${{ github.sha }}
 
+      - name: Seed prod (idempoten — upsert only, tanpa cleanDb, kredensial dari SEED_* env)
+        # Dijalankan SETELAH deploy karena migrate jalan inline di start.sh
+        # (tabel baru ada setelah container pertama boot).
+        run: docker run --rm --env-file .env kamisama/kamisama-open-api:${{ github.sha }} bun prisma/seed.prod.ts
+
       - name: Register subdomain (route DNS dulu, idempotent)
         run: |
           HOST=$(echo "${{ vars.PRODUCTION_URL }}" | sed -e 's|https://||' -e 's|http://||' -e 's|/.*||')
