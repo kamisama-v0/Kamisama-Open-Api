@@ -4,7 +4,7 @@
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"dev": "bun run --watch src/index.ts",
-		"build": "bun build --compile --minify-whitespace --minify-syntax --target bun --outfile ./server ./src/index.ts",
+		"build": "bun build --compile --minify-whitespace --target bun --outfile ./server ./src/index.ts",
 		"start": "bun run --watch src/index.ts",
 		"auth:generate": "bun x @better-auth/cli generate --config src/libs/auth.ts",
 		"auth:migrate": "bun x @better-auth/cli migrate",
